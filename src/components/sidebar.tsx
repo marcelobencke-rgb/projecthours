@@ -58,6 +58,7 @@ export default function Sidebar({ userEmail, initialTimerState }: SidebarProps) 
   const [elapsed, setElapsed] = useState(initialTimerState?.elapsed_seconds || 0);
   
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
 
   useEffect(() => {
@@ -88,27 +89,34 @@ export default function Sidebar({ userEmail, initialTimerState }: SidebarProps) 
   function handleToggleTimer() {
     if (!timerState) return;
     
-    startTransition(async () => {
-      if (timerState.isActive) {
-        let excludeNonWorkTime = false;
+    if (timerState.isActive) {
+      if (profile && profile.work_hours && profile.work_hours.length > 0) {
+        const start = new Date(timerState.start_time!);
+        const end = new Date();
+        const totalSeconds = Math.floor((end.getTime() - start.getTime()) / 1000);
+        const workSeconds = calculateWorkSeconds(start, end, profile.work_hours);
         
-        if (profile && profile.work_hours && profile.work_hours.length > 0) {
-          const start = new Date(timerState.start_time!);
-          const end = new Date();
-          const totalSeconds = Math.floor((end.getTime() - start.getTime()) / 1000);
-          const workSeconds = calculateWorkSeconds(start, end, profile.work_hours);
-          
-          if (workSeconds < totalSeconds - 60) {
-            const confirm = window.confirm('Este período inclui horas fora do seu horário de trabalho. Deseja contabilizar essas horas extras no projeto? (Clique Cancelar para descartar as horas extras)');
-            excludeNonWorkTime = !confirm;
-          }
+        if (workSeconds < totalSeconds - 60) {
+          setConfirmModalOpen(true);
+          return;
         }
-
-        await stopTimer(timerState.entry_id, { excludeNonWorkTime });
-      } else {
-        await startTimer(timerState.task_id);
       }
-      router.refresh();
+      executeStopTimer(false);
+    } else {
+      startTransition(async () => {
+        await startTimer(timerState.task_id);
+        router.refresh();
+      });
+    }
+  }
+
+  function executeStopTimer(excludeNonWorkTime: boolean) {
+    setConfirmModalOpen(false);
+    startTransition(async () => {
+      if (timerState) {
+        await stopTimer(timerState.entry_id, { excludeNonWorkTime });
+        router.refresh();
+      }
     });
   }
 
@@ -281,6 +289,36 @@ export default function Sidebar({ userEmail, initialTimerState }: SidebarProps) 
         onClose={() => setIsSettingsOpen(false)} 
         userEmail={userEmail} 
       />
+
+      {confirmModalOpen && (
+        <div className="modal-overlay" style={{ zIndex: 9999 }}>
+          <div className="modal-content" style={{ maxWidth: '400px', textAlign: 'center', padding: '2rem' }}>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <div style={{ width: '56px', height: '56px', background: '#3b82f622', color: '#3b82f6', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem' }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+              </div>
+              <h3 style={{ marginBottom: '0.75rem', fontSize: '1.25rem' }}>Horas Extras Detectadas</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.5 }}>
+                Este período inclui tempo trabalhado fora do seu horário configurado nas suas configurações.
+              </p>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <button onClick={() => executeStopTimer(false)} className="btn btn-primary" style={{ width: '100%', padding: '0.75rem' }}>
+                Contabilizar horas extras
+              </button>
+              <button onClick={() => executeStopTimer(true)} className="btn btn-outline" style={{ width: '100%', padding: '0.75rem' }}>
+                Descartar horas extras
+              </button>
+              <button onClick={() => setConfirmModalOpen(false)} className="btn btn-ghost" style={{ width: '100%', padding: '0.5rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+                Cancelar pausa
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
