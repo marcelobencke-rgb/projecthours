@@ -1,3 +1,18 @@
+export interface WorkHourInterval {
+  start: string; // HH:mm
+  end: string; // HH:mm
+}
+
+export interface Profile {
+  id: string;
+  name: string | null;
+  phone: string | null;
+  avatar_url: string | null;
+  work_hours: WorkHourInterval[];
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface Project {
   id: string;
   user_id: string;

@@ -67,7 +67,46 @@ export async function startTimer(taskId: string) {
   return { success: true, entry: data };
 }
 
-export async function stopTimer(entryId: string) {
+import { getUserProfile } from './profiles';
+
+function calculateWorkSeconds(startTime: Date, endTime: Date, workHours: {start: string, end: string}[]): number {
+  if (!workHours || workHours.length === 0) {
+    return Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
+  }
+
+  let totalSeconds = 0;
+  const current = new Date(startTime);
+  current.setHours(0, 0, 0, 0);
+  const endDay = new Date(endTime);
+  endDay.setHours(0, 0, 0, 0);
+
+  while (current <= endDay) {
+    const isStartDay = current.getTime() === new Date(startTime).setHours(0,0,0,0);
+    const isEndDay = current.getTime() === new Date(endTime).setHours(0,0,0,0);
+    
+    for (const wh of workHours) {
+      const [startH, startM] = wh.start.split(':').map(Number);
+      const [endH, endM] = wh.end.split(':').map(Number);
+      
+      const whStart = new Date(current);
+      whStart.setHours(startH, startM, 0, 0);
+      
+      const whEnd = new Date(current);
+      whEnd.setHours(endH, endM, 0, 0);
+      
+      const actualStart = (isStartDay && startTime > whStart) ? startTime : whStart;
+      const actualEnd = (isEndDay && endTime < whEnd) ? endTime : whEnd;
+      
+      if (actualStart < actualEnd) {
+        totalSeconds += Math.floor((actualEnd.getTime() - actualStart.getTime()) / 1000);
+      }
+    }
+    current.setDate(current.getDate() + 1);
+  }
+  return totalSeconds;
+}
+
+export async function stopTimer(entryId: string, options?: { excludeNonWorkTime?: boolean }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: 'Não autenticado' };
@@ -83,9 +122,16 @@ export async function stopTimer(entryId: string) {
   if (!entry) return { error: 'Entrada não encontrada' };
 
   const now = new Date().toISOString();
-  const duration = Math.floor(
+  let duration = Math.floor(
     (new Date(now).getTime() - new Date(entry.start_time).getTime()) / 1000
   );
+
+  if (options?.excludeNonWorkTime) {
+    const profile = await getUserProfile();
+    if (profile && profile.work_hours) {
+      duration = calculateWorkSeconds(new Date(entry.start_time), new Date(now), profile.work_hours);
+    }
+  }
 
   const { error } = await supabase
     .from('time_entries')
