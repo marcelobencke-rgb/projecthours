@@ -200,3 +200,62 @@ export async function getAllTasks(): Promise<Task[]> {
 
   return tasksWithTime;
 }
+export async function getTaskWithEntries(taskId: string, startDate?: string, endDate?: string): Promise<Task | null> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data: task, error } = await supabase
+    .from('tasks')
+    .select(`
+      *,
+      projects (
+        id,
+        name,
+        color
+      )
+    `)
+    .eq('id', taskId)
+    .eq('user_id', user.id)
+    .single();
+
+  if (error || !task) {
+    console.error('Error fetching task details:', error?.message || 'Task not found');
+    return null;
+  }
+
+  let query = supabase
+    .from('time_entries')
+    .select('*')
+    .eq('task_id', taskId)
+    .order('start_time', { ascending: false });
+
+  if (startDate) {
+    query = query.gte('start_time', startDate);
+  }
+  if (endDate) {
+    query = query.lte('start_time', endDate);
+  }
+
+  const { data: entries } = await query;
+
+  const totalSeconds = (entries || []).reduce(
+    (sum, e) => sum + (e.duration_seconds || 0),
+    0
+  );
+
+  const activeEntry = (entries || []).find((e) => e.end_time === null) || null;
+  const project = task.projects as unknown as { id: string; name: string; color: string };
+
+  return {
+    ...task,
+    project: project ? {
+      id: project.id,
+      name: project.name,
+      color: project.color,
+    } : undefined,
+    total_seconds: totalSeconds,
+    active_entry: activeEntry,
+    entries: entries || [],
+  } as unknown as Task;
+}

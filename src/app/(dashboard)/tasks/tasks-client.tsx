@@ -209,7 +209,7 @@ export default function TasksClient({ tasks, projects }: TasksClientProps) {
                               </tr>
                             </thead>
                             <tbody>
-                              {task.entries.map(entry => (
+                              {task.entries.slice(0, 5).map(entry => (
                                 <tr key={entry.id} style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
                                   <td style={{ padding: '0.5rem' }}>{new Date(entry.start_time).toLocaleDateString('pt-BR')}</td>
                                   <td style={{ padding: '0.5rem' }}>{new Date(entry.start_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td>
@@ -225,6 +225,11 @@ export default function TasksClient({ tasks, projects }: TasksClientProps) {
                               ))}
                             </tbody>
                           </table>
+                          <div style={{ marginTop: '0.75rem', display: 'flex', justifyContent: 'center' }}>
+                            <Link href={`/tasks/${task.id}`} className="btn btn-outline" style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}>
+                              Ver histórico completo {task.entries.length > 5 ? `(${task.entries.length})` : ''}
+                            </Link>
+                          </div>
                         </div>
                       )}
                     </div>

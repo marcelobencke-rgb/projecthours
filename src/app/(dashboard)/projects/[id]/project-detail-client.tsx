@@ -22,7 +22,12 @@ export default function ProjectDetailClient({ project, tasks, totalSeconds }: Pr
   const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [activeTab, setActiveTab] = useState<'all' | 'open' | 'in_progress' | 'done'>('all');
+  const [expandedTasks, setExpandedTasks] = useState<Record<string, boolean>>({});
   const router = useRouter();
+
+  function toggleExpandTask(taskId: string) {
+    setExpandedTasks(prev => ({ ...prev, [taskId]: !prev[taskId] }));
+  }
 
   const filteredTasks = activeTab === 'all'
     ? tasks
@@ -155,55 +160,115 @@ export default function ProjectDetailClient({ project, tasks, totalSeconds }: Pr
           </div>
         ) : (
           <div className="glass-card task-list stagger-children" style={{ overflow: 'hidden' }}>
-            {filteredTasks.map((task) => (
-              <div key={task.id} className="task-row">
-                <div className={`task-row-status ${task.status}`} />
-                <div className="task-row-info">
-                  <div className="task-row-name">{task.name}</div>
-                  {task.description && (
-                    <div className="task-row-meta">{task.description}</div>
+            {filteredTasks.map((task) => {
+              const isExpanded = !!expandedTasks[task.id];
+              return (
+                <div key={task.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                  <div className="task-row" style={{ borderBottom: 'none' }}>
+                    <div className={`task-row-status ${task.status}`} />
+                    <div className="task-row-info">
+                      <div className="task-row-name">{task.name}</div>
+                      {task.description && (
+                        <div className="task-row-meta">{task.description}</div>
+                      )}
+                    </div>
+
+                    <select
+                      className="input"
+                      value={task.status}
+                      onChange={(e) => handleStatusChange(task.id, e.target.value)}
+                      style={{
+                        width: 'auto',
+                        padding: '4px 28px 4px 8px',
+                        fontSize: 'var(--font-xs)',
+                        background: 'var(--bg-tertiary)',
+                      }}
+                    >
+                      <option value="open">Aberta</option>
+                      <option value="in_progress">Em andamento</option>
+                      <option value="done">Concluída</option>
+                    </select>
+
+                    <TimerButton
+                      taskId={task.id}
+                      activeEntryId={task.active_entry?.id || null}
+                      activeStartTime={task.active_entry?.start_time || null}
+                      totalSeconds={task.total_seconds || 0}
+                      onTimerChange={() => router.refresh()}
+                    />
+
+                    <button
+                      onClick={() => toggleExpandTask(task.id)}
+                      className="btn btn-icon-sm btn-ghost"
+                      title={isExpanded ? "Ocultar lançamentos" : "Ver lançamentos"}
+                      style={{ color: 'var(--text-tertiary)' }}
+                    >
+                      {isExpanded ? (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                      ) : (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                      )}
+                    </button>
+
+                    <button
+                      onClick={() => handleDeleteTask(task.id)}
+                      className="btn btn-icon-sm btn-ghost"
+                      title="Excluir tarefa"
+                      style={{ color: 'var(--text-tertiary)' }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 6h18" />
+                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  {isExpanded && (
+                    <div style={{ padding: '1rem', paddingLeft: '3rem', background: 'var(--bg-tertiary)', fontSize: '0.85rem' }}>
+                      <h4 style={{ marginBottom: '0.75rem', color: 'var(--text-secondary)' }}>Histórico de Lançamentos</h4>
+                      {(!task.entries || task.entries.length === 0) ? (
+                        <p style={{ color: 'var(--text-tertiary)' }}>Nenhum lançamento de tempo registrado para esta tarefa.</p>
+                      ) : (
+                        <div style={{ overflowX: 'auto' }}>
+                          <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
+                            <thead>
+                              <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-tertiary)' }}>
+                                <th style={{ padding: '0.5rem', fontWeight: '500' }}>Data</th>
+                                <th style={{ padding: '0.5rem', fontWeight: '500' }}>Início</th>
+                                <th style={{ padding: '0.5rem', fontWeight: '500' }}>Fim</th>
+                                <th style={{ padding: '0.5rem', fontWeight: '500', textAlign: 'right' }}>Duração</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {task.entries.slice(0, 5).map((entry: any) => (
+                                <tr key={entry.id} style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
+                                  <td style={{ padding: '0.5rem' }}>{new Date(entry.start_time).toLocaleDateString('pt-BR')}</td>
+                                  <td style={{ padding: '0.5rem' }}>{new Date(entry.start_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td>
+                                  <td style={{ padding: '0.5rem' }}>
+                                    {entry.end_time ? new Date(entry.end_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : (
+                                      <span style={{ color: 'var(--warning)', fontSize: '0.75rem' }}>Em andamento</span>
+                                    )}
+                                  </td>
+                                  <td style={{ padding: '0.5rem', textAlign: 'right', fontFamily: 'monospace' }}>
+                                    {formatDurationHuman(entry.duration_seconds || 0)}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                          <div style={{ marginTop: '0.75rem', display: 'flex', justifyContent: 'center' }}>
+                            <Link href={`/tasks/${task.id}`} className="btn btn-outline" style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}>
+                              Ver histórico completo {task.entries.length > 5 ? `(${task.entries.length})` : ''}
+                            </Link>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
-
-                {/* Status selector */}
-                <select
-                  className="input"
-                  value={task.status}
-                  onChange={(e) => handleStatusChange(task.id, e.target.value)}
-                  style={{
-                    width: 'auto',
-                    padding: '4px 28px 4px 8px',
-                    fontSize: 'var(--font-xs)',
-                    background: 'var(--bg-tertiary)',
-                  }}
-                >
-                  <option value="open">Aberta</option>
-                  <option value="in_progress">Em andamento</option>
-                  <option value="done">Concluída</option>
-                </select>
-
-                <TimerButton
-                  taskId={task.id}
-                  activeEntryId={task.active_entry?.id || null}
-                  activeStartTime={task.active_entry?.start_time || null}
-                  totalSeconds={task.total_seconds || 0}
-                  onTimerChange={() => router.refresh()}
-                />
-
-                <button
-                  onClick={() => handleDeleteTask(task.id)}
-                  className="btn btn-icon-sm btn-ghost"
-                  title="Excluir tarefa"
-                  style={{ color: 'var(--text-tertiary)' }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M3 6h18" />
-                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                  </svg>
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
