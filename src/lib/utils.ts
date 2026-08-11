@@ -41,6 +41,7 @@ export function formatDate(dateStr: string, locale: string = 'pt-BR'): string {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
+    timeZone: 'America/Sao_Paulo'
   });
 }
 
@@ -51,6 +52,7 @@ export function formatTime(dateStr: string, locale: string = 'pt-BR'): string {
   return parseDate(dateStr).toLocaleTimeString(locale, {
     hour: '2-digit',
     minute: '2-digit',
+    timeZone: 'America/Sao_Paulo'
   });
 }
 

@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import type { Task } from '@/lib/types';
 import Link from 'next/link';
-import { formatDurationHuman, parseDate } from '@/lib/utils';
+import { formatDurationHuman, parseDate, formatDate, formatTime } from '@/lib/utils';
 import { getTaskWithEntries } from '@/app/actions/tasks';
 
 interface TaskDetailClientProps {
@@ -139,10 +139,10 @@ export default function TaskDetailClient({ initialTask }: TaskDetailClientProps)
                 <tbody>
                   {visibleEntries.map((entry: any) => (
                     <tr key={entry.id} style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
-                      <td style={{ padding: '0.75rem 1rem' }}>{parseDate(entry.start_time).toLocaleDateString('pt-BR')}</td>
-                      <td style={{ padding: '0.75rem 1rem' }}>{parseDate(entry.start_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td>
+                      <td style={{ padding: '0.75rem 1rem' }}>{formatDate(entry.start_time)}</td>
+                      <td style={{ padding: '0.75rem 1rem' }}>{formatTime(entry.start_time)}</td>
                       <td style={{ padding: '0.75rem 1rem' }}>
-                        {entry.end_time ? parseDate(entry.end_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : (
+                        {entry.end_time ? formatTime(entry.end_time) : (
                           <span style={{ color: 'var(--warning)', fontSize: '0.75rem', fontWeight: '500' }}>Em andamento</span>
                         )}
                       </td>
