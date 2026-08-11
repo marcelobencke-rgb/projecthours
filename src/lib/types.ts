@@ -40,6 +40,7 @@ export interface Task {
   // Computed fields
   total_seconds?: number;
   active_entry?: TimeEntry | null;
+  entries?: TimeEntry[];
   project?: {
     id: string;
     name: string;

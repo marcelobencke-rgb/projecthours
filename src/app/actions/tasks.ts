@@ -41,7 +41,8 @@ export async function getTasksByProject(projectId: string): Promise<Task[]> {
         ...task,
         total_seconds: totalSeconds,
         active_entry: activeEntry,
-      } as Task;
+        entries: entries || [],
+      } as unknown as Task;
     })
   );
 
@@ -192,7 +193,8 @@ export async function getAllTasks(): Promise<Task[]> {
         } : undefined,
         total_seconds: totalSeconds,
         active_entry: activeEntry,
-      } as Task;
+        entries: entries || [],
+      } as unknown as Task;
     })
   );
 
