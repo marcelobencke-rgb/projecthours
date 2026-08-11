@@ -7,7 +7,7 @@ import TimerButton from '@/components/timer-button';
 import { deleteTask, updateTaskStatus } from '@/app/actions/tasks';
 import Link from 'next/link';
 import CreateTaskModal from '@/components/create-task-modal';
-import { formatDuration } from '@/lib/utils';
+import { formatDuration, parseDate } from '@/lib/utils';
 
 interface TasksClientProps {
   tasks: Task[];
@@ -211,11 +211,11 @@ export default function TasksClient({ tasks, projects }: TasksClientProps) {
                             <tbody>
                               {task.entries.slice(0, 5).map(entry => (
                                 <tr key={entry.id} style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
-                                  <td style={{ padding: '0.5rem' }}>{new Date(entry.start_time).toLocaleDateString('pt-BR')}</td>
-                                  <td style={{ padding: '0.5rem' }}>{new Date(entry.start_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td>
+                                  <td style={{ padding: '0.5rem' }}>{parseDate(entry.start_time).toLocaleDateString('pt-BR')}</td>
+                                  <td style={{ padding: '0.5rem' }}>{parseDate(entry.start_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td>
                                   <td style={{ padding: '0.5rem' }}>
-                                    {entry.end_time ? new Date(entry.end_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : (
-                                      <span style={{ color: 'var(--warning)', fontSize: '0.75rem' }}>Em andamento</span>
+                                    {entry.end_time ? parseDate(entry.end_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : (
+                                      <span style={{ color: 'var(--warning)', fontSize: '0.75rem', fontWeight: '500' }}>Em andamento</span>
                                     )}
                                   </td>
                                   <td style={{ padding: '0.5rem', textAlign: 'right', fontFamily: 'monospace' }}>

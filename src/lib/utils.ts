@@ -24,10 +24,20 @@ export function formatDurationHuman(totalSeconds: number): string {
 }
 
 /**
+ * Safely parse a date string from Supabase.
+ * Supabase sometimes returns timestamps without the 'Z' (UTC) identifier.
+ */
+export function parseDate(dateStr: string | null | undefined): Date {
+  if (!dateStr) return new Date();
+  const isUTC = dateStr.endsWith('Z') || dateStr.includes('+') || !!dateStr.match(/-\d{2}:\d{2}$/);
+  return new Date(isUTC ? dateStr : dateStr + 'Z');
+}
+
+/**
  * Format a date string to locale format
  */
 export function formatDate(dateStr: string, locale: string = 'pt-BR'): string {
-  return new Date(dateStr).toLocaleDateString(locale, {
+  return parseDate(dateStr).toLocaleDateString(locale, {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -38,7 +48,7 @@ export function formatDate(dateStr: string, locale: string = 'pt-BR'): string {
  * Format a date string to time format
  */
 export function formatTime(dateStr: string, locale: string = 'pt-BR'): string {
-  return new Date(dateStr).toLocaleTimeString(locale, {
+  return parseDate(dateStr).toLocaleTimeString(locale, {
     hour: '2-digit',
     minute: '2-digit',
   });
@@ -69,7 +79,7 @@ export function getStartOfWeek(): string {
  * Calculate elapsed seconds from start_time to now
  */
 export function getElapsedSeconds(startTime: string): number {
-  const start = new Date(startTime).getTime();
+  const start = parseDate(startTime).getTime();
   const now = Date.now();
   return Math.floor((now - start) / 1000);
 }
