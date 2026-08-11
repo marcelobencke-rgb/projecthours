@@ -73,33 +73,35 @@ export default function TaskDetailClient({ initialTask }: TaskDetailClientProps)
       </header>
 
       <div className="page-content">
-        <div className="glass-card" style={{ marginBottom: '1.5rem' }}>
-          <h2 style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>Filtros</h2>
+        <div className="glass-card" style={{ marginBottom: '1.5rem', padding: '1.5rem' }}>
+          <h2 style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>Filtros</h2>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-            <div className="form-group" style={{ marginBottom: 0, minWidth: '150px' }}>
-              <label className="label" style={{ fontSize: '0.85rem', marginBottom: '0.25rem' }}>Data Inicial</label>
+            <div className="form-group" style={{ margin: 0, minWidth: '160px' }}>
+              <label className="label" style={{ fontSize: '0.85rem', marginBottom: '0.5rem', display: 'block' }}>Data Inicial</label>
               <input 
                 type="date" 
                 className="input" 
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
+                style={{ width: '100%' }}
               />
             </div>
-            <div className="form-group" style={{ marginBottom: 0, minWidth: '150px' }}>
-              <label className="label" style={{ fontSize: '0.85rem', marginBottom: '0.25rem' }}>Data Final</label>
+            <div className="form-group" style={{ margin: 0, minWidth: '160px' }}>
+              <label className="label" style={{ fontSize: '0.85rem', marginBottom: '0.5rem', display: 'block' }}>Data Final</label>
               <input 
                 type="date" 
                 className="input" 
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
+                style={{ width: '100%' }}
               />
             </div>
-            <div style={{ display: 'flex', gap: '0.5rem', flex: 1, minWidth: '200px' }}>
-              <button onClick={handleFilter} disabled={isPending} className="btn btn-primary" style={{ whiteSpace: 'nowrap' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', paddingBottom: '2px' }}>
+              <button onClick={handleFilter} disabled={isPending} className="btn btn-primary" style={{ whiteSpace: 'nowrap', height: '42px' }}>
                 {isPending ? 'Filtrando...' : 'Aplicar Filtros'}
               </button>
               {(startDate || endDate) && (
-                <button onClick={handleClearFilters} disabled={isPending} className="btn btn-ghost" style={{ whiteSpace: 'nowrap' }}>
+                <button onClick={handleClearFilters} disabled={isPending} className="btn btn-ghost" style={{ whiteSpace: 'nowrap', height: '42px' }}>
                   Limpar
                 </button>
               )}
@@ -107,7 +109,7 @@ export default function TaskDetailClient({ initialTask }: TaskDetailClientProps)
           </div>
         </div>
 
-        <div className="glass-card">
+        <div className="glass-card" style={{ padding: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
             <h2 style={{ fontSize: '1.1rem' }}>Histórico Completo de Lançamentos</h2>
             <span style={{ color: 'var(--text-tertiary)', fontSize: '0.9rem' }}>
