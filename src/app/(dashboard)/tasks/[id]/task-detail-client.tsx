@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import type { Task } from '@/lib/types';
 import Link from 'next/link';
-import { formatDuration, formatDurationHuman } from '@/lib/utils';
+import { formatDurationHuman } from '@/lib/utils';
 import { getTaskWithEntries } from '@/app/actions/tasks';
 
 interface TaskDetailClientProps {
@@ -14,17 +14,18 @@ export default function TaskDetailClient({ initialTask }: TaskDetailClientProps)
   const [task, setTask] = useState<Task>(initialTask);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [visibleCount, setVisibleCount] = useState(50);
   const [isPending, startTransition] = useTransition();
 
   const handleFilter = () => {
     startTransition(async () => {
-      // Adiciona o horário 00:00 no start e 23:59 no end para cobrir os dias inteiros
       const start = startDate ? `${startDate}T00:00:00.000Z` : undefined;
       const end = endDate ? `${endDate}T23:59:59.999Z` : undefined;
       
       const updatedTask = await getTaskWithEntries(task.id, start, end);
       if (updatedTask) {
         setTask(updatedTask);
+        setVisibleCount(50); // Reset pagination on filter
       }
     });
   };
@@ -36,9 +37,13 @@ export default function TaskDetailClient({ initialTask }: TaskDetailClientProps)
       const updatedTask = await getTaskWithEntries(task.id);
       if (updatedTask) {
         setTask(updatedTask);
+        setVisibleCount(50);
       }
     });
   };
+
+  const visibleEntries = task.entries?.slice(0, visibleCount) || [];
+  const hasMore = (task.entries?.length || 0) > visibleCount;
 
   return (
     <>
@@ -69,10 +74,10 @@ export default function TaskDetailClient({ initialTask }: TaskDetailClientProps)
 
       <div className="page-content">
         <div className="glass-card" style={{ marginBottom: '1.5rem' }}>
-          <h2 style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>Filtros</h2>
+          <h2 style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>Filtros</h2>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="label">Data Inicial</label>
+            <div className="form-group" style={{ marginBottom: 0, minWidth: '150px' }}>
+              <label className="label" style={{ fontSize: '0.85rem', marginBottom: '0.25rem' }}>Data Inicial</label>
               <input 
                 type="date" 
                 className="input" 
@@ -80,8 +85,8 @@ export default function TaskDetailClient({ initialTask }: TaskDetailClientProps)
                 onChange={(e) => setStartDate(e.target.value)}
               />
             </div>
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="label">Data Final</label>
+            <div className="form-group" style={{ marginBottom: 0, minWidth: '150px' }}>
+              <label className="label" style={{ fontSize: '0.85rem', marginBottom: '0.25rem' }}>Data Final</label>
               <input 
                 type="date" 
                 className="input" 
@@ -89,14 +94,16 @@ export default function TaskDetailClient({ initialTask }: TaskDetailClientProps)
                 onChange={(e) => setEndDate(e.target.value)}
               />
             </div>
-            <button onClick={handleFilter} disabled={isPending} className="btn btn-primary">
-              {isPending ? 'Filtrando...' : 'Aplicar Filtros'}
-            </button>
-            {(startDate || endDate) && (
-              <button onClick={handleClearFilters} disabled={isPending} className="btn btn-ghost">
-                Limpar
+            <div style={{ display: 'flex', gap: '0.5rem', flex: 1, minWidth: '200px' }}>
+              <button onClick={handleFilter} disabled={isPending} className="btn btn-primary" style={{ whiteSpace: 'nowrap' }}>
+                {isPending ? 'Filtrando...' : 'Aplicar Filtros'}
               </button>
-            )}
+              {(startDate || endDate) && (
+                <button onClick={handleClearFilters} disabled={isPending} className="btn btn-ghost" style={{ whiteSpace: 'nowrap' }}>
+                  Limpar
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -128,7 +135,7 @@ export default function TaskDetailClient({ initialTask }: TaskDetailClientProps)
                   </tr>
                 </thead>
                 <tbody>
-                  {task.entries.map((entry: any) => (
+                  {visibleEntries.map((entry: any) => (
                     <tr key={entry.id} style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
                       <td style={{ padding: '0.75rem 1rem' }}>{new Date(entry.start_time).toLocaleDateString('pt-BR')}</td>
                       <td style={{ padding: '0.75rem 1rem' }}>{new Date(entry.start_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td>
@@ -144,6 +151,13 @@ export default function TaskDetailClient({ initialTask }: TaskDetailClientProps)
                   ))}
                 </tbody>
               </table>
+              {hasMore && (
+                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1.5rem', paddingBottom: '0.5rem' }}>
+                  <button onClick={() => setVisibleCount(prev => prev + 50)} className="btn btn-outline">
+                    Carregar mais registros
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
