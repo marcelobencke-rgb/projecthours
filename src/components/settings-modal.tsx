@@ -105,33 +105,45 @@ export default function SettingsModal({ isOpen, onClose, userEmail }: SettingsMo
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content" style={{ maxWidth: '500px' }}>
-        <div className="modal-header">
-          <h2>Configurações</h2>
-          <button onClick={onClose} className="btn-close">×</button>
+      <div className="modal-content" style={{ maxWidth: '500px', background: 'var(--bg-primary)', padding: '2rem', borderRadius: '1rem', border: '1px solid var(--border)' }}>
+        <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 600 }}>Configurações</h2>
+          <button onClick={onClose} className="btn-icon-sm btn-ghost" style={{ border: 'none', background: 'transparent', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--text-secondary)' }}>×</button>
         </div>
 
-        <div className="settings-tabs" style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid var(--border)', marginBottom: '1.5rem', paddingBottom: '0.5rem' }}>
+        <div className="settings-tabs" style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid var(--border)', marginBottom: '1.5rem' }}>
           <button 
-            className={`btn-ghost ${activeTab === 'profile' ? 'active' : ''}`} 
-            style={{ fontWeight: activeTab === 'profile' ? '600' : 'normal', color: activeTab === 'profile' ? 'var(--text)' : 'var(--text-secondary)' }}
+            className="btn btn-ghost" 
+            style={{ 
+              fontWeight: activeTab === 'profile' ? '600' : 'normal', 
+              color: activeTab === 'profile' ? 'var(--text-primary)' : 'var(--text-secondary)',
+              borderBottom: activeTab === 'profile' ? '2px solid var(--primary)' : '2px solid transparent',
+              borderRadius: '0',
+              padding: '0.5rem 1rem'
+            }}
             onClick={() => setActiveTab('profile')}
           >
             Perfil
           </button>
           <button 
-            className={`btn-ghost ${activeTab === 'hours' ? 'active' : ''}`}
-            style={{ fontWeight: activeTab === 'hours' ? '600' : 'normal', color: activeTab === 'hours' ? 'var(--text)' : 'var(--text-secondary)' }}
+            className="btn btn-ghost"
+            style={{ 
+              fontWeight: activeTab === 'hours' ? '600' : 'normal', 
+              color: activeTab === 'hours' ? 'var(--text-primary)' : 'var(--text-secondary)',
+              borderBottom: activeTab === 'hours' ? '2px solid var(--primary)' : '2px solid transparent',
+              borderRadius: '0',
+              padding: '0.5rem 1rem'
+            }}
             onClick={() => setActiveTab('hours')}
           >
             Horário de Trabalho
           </button>
         </div>
 
-        {error && <div className="error-message" style={{ color: 'var(--danger)', marginBottom: '1rem' }}>{error}</div>}
+        {error && <div className="error-message" style={{ color: 'var(--danger)', marginBottom: '1rem', background: '#ef444422', padding: '0.75rem', borderRadius: '0.5rem' }}>{error}</div>}
 
         {activeTab === 'profile' && (
-          <form onSubmit={handleSaveProfile} className="form-group">
+          <form onSubmit={handleSaveProfile}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
               <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'var(--bg-secondary)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {avatarUrl ? (
@@ -148,31 +160,31 @@ export default function SettingsModal({ isOpen, onClose, userEmail }: SettingsMo
               </div>
             </div>
 
-            <div className="form-field">
-              <label>Nome</label>
-              <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Seu nome" />
+            <div className="form-group" style={{ marginBottom: '1rem' }}>
+              <label className="label">Nome</label>
+              <input type="text" className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Seu nome" />
             </div>
 
-            <div className="form-field">
-              <label>Celular (Opcional)</label>
-              <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(00) 00000-0000" />
+            <div className="form-group" style={{ marginBottom: '1rem' }}>
+              <label className="label">Celular (Opcional)</label>
+              <input type="text" className="input" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(00) 00000-0000" />
             </div>
 
-            <div className="form-field">
-              <label>E-mail</label>
-              <input type="email" value={userEmail} disabled style={{ opacity: 0.7 }} />
+            <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+              <label className="label">E-mail</label>
+              <input type="email" className="input" value={userEmail} disabled style={{ opacity: 0.7 }} />
             </div>
 
-            <div className="modal-actions">
-              <button type="button" onClick={onClose} className="btn btn-outline">Cancelar</button>
+            <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+              <button type="button" onClick={onClose} className="btn btn-ghost">Cancelar</button>
               <button type="submit" className="btn btn-primary" disabled={isPending}>Salvar Perfil</button>
             </div>
           </form>
         )}
 
         {activeTab === 'hours' && (
-          <div className="form-group">
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+          <div>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem', lineHeight: '1.5' }}>
               Configure seus intervalos de trabalho diários. O sistema usará esses horários para descontar horas não-úteis quando você esquecer o timer ligado.
             </p>
 
@@ -181,31 +193,33 @@ export default function SettingsModal({ isOpen, onClose, userEmail }: SettingsMo
                 <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <input 
                     type="time" 
+                    className="input"
                     value={wh.start} 
                     onChange={(e) => updateWorkHour(index, 'start', e.target.value)}
                     style={{ flex: 1 }}
                   />
-                  <span>até</span>
+                  <span style={{ color: 'var(--text-tertiary)', fontSize: '0.9rem' }}>até</span>
                   <input 
                     type="time" 
+                    className="input"
                     value={wh.end} 
                     onChange={(e) => updateWorkHour(index, 'end', e.target.value)}
                     style={{ flex: 1 }}
                   />
-                  <button onClick={() => removeWorkHour(index)} className="btn-icon-sm" style={{ color: 'var(--danger)' }} title="Remover">
-                    ×
+                  <button type="button" onClick={() => removeWorkHour(index)} className="btn btn-icon-sm btn-ghost" style={{ color: 'var(--danger)' }} title="Remover">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                   </button>
                 </div>
               ))}
             </div>
 
-            <button onClick={addWorkHour} className="btn btn-outline" style={{ marginBottom: '2rem', width: '100%' }}>
+            <button type="button" onClick={addWorkHour} className="btn btn-outline" style={{ marginBottom: '2rem', width: '100%', borderStyle: 'dashed' }}>
               + Adicionar Horário
             </button>
 
-            <div className="modal-actions">
-              <button onClick={onClose} className="btn btn-outline">Cancelar</button>
-              <button onClick={handleSaveHours} className="btn btn-primary" disabled={isPending}>Salvar Horários</button>
+            <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+              <button type="button" onClick={onClose} className="btn btn-ghost">Cancelar</button>
+              <button type="button" onClick={handleSaveHours} className="btn btn-primary" disabled={isPending}>Salvar Horários</button>
             </div>
           </div>
         )}
